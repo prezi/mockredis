@@ -54,3 +54,7 @@ env/
 *egg_info/
 *egg/
 *-ck.js
+
+# Ide files #
+#############
+.idea
