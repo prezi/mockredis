@@ -1,7 +1,11 @@
+from __future__ import absolute_import
+
 import random
 
 from collections import defaultdict
 from mockredis.lock import MockRedisLock
+from redis.exceptions import RedisError
+import warnings
 
 
 class MockRedis(object):
@@ -83,8 +87,8 @@ class MockRedis(object):
         """Emulate hget."""
 
         # Return '' if the attribute does not exist
-        result = self.redis[hashkey][attribute] if attribute in self.redis[hashkey] \
-                 else ''
+        result = self.redis[hashkey][attribute] if attribute in self.redis[hashkey]\
+        else ''
         return result
 
     def hgetall(self, hashkey):  # pylint: disable=R0201
@@ -135,7 +139,7 @@ class MockRedis(object):
         if self.redis.has_key(key):
             result = self.redis[key].pop()
             if self.redis[key] == []:
-            	self.delete(key)
+                self.delete(key)
             return result
 
     def sadd(self, key, value):  # pylint: disable=R0201
@@ -172,6 +176,29 @@ class MockRedis(object):
 
     def flushdb(self):
         self.redis.clear()
+
+    #### SORTED SET COMMANDS ####
+    def zadd(self, name, value=None, score=None, **pairs):
+        """
+        For each kwarg in ``pairs``, add that item and it's score to the
+        sorted set ``name``.
+
+        The ``value`` and ``score`` arguments are deprecated.
+        """
+        all_pairs = {}
+        if value is not None or score is not None:
+            if value is None or score is None:
+                raise RedisError("Both 'value' and 'score' must be specified to ZADD")
+            warnings.warn(DeprecationWarning("Passing 'value' and 'score' has been deprecated. Please pass via kwargs instead."))
+            all_pairs.update({value:score})
+        for pair in pairs.iteritems():
+            all_pairs.update({pair[0]:pair[1]})
+        for key, score in all_pairs.iteritems():
+            self.redis[name][key] = score
+
+    def zscore(self, name, value):
+        "Return the score of element ``value`` in sorted set ``name``"
+        return self.redis[name][value]
 
 
 def mock_redis_client():
