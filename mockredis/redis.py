@@ -1,11 +1,12 @@
 from __future__ import absolute_import
 
 import random
-
+from operator import itemgetter
 from collections import defaultdict
+import warnings
+
 from mockredis.lock import MockRedisLock
 from redis.exceptions import RedisError
-import warnings
 
 
 class MockRedis(object):
@@ -13,13 +14,18 @@ class MockRedis(object):
     without needing a real Redis server."""
 
     # The 'Redis' store
-    redis = defaultdict(dict)
+    redis = None
     # The pipeline
     pipe = None
 
     def __init__(self):
         """Initialize the object."""
-        pass
+        self.reset()
+
+    @classmethod
+    def reset(cls):
+        cls.redis = defaultdict(dict)
+
 
     def type(self, key):
         _type = type(self.redis[key])
@@ -190,15 +196,34 @@ class MockRedis(object):
             if value is None or score is None:
                 raise RedisError("Both 'value' and 'score' must be specified to ZADD")
             warnings.warn(DeprecationWarning("Passing 'value' and 'score' has been deprecated. Please pass via kwargs instead."))
-            all_pairs.update({value:score})
+            all_pairs.update({value: score})
         for pair in pairs.iteritems():
-            all_pairs.update({pair[0]:pair[1]})
+            all_pairs.update({pair[0]: pair[1]})
         for key, score in all_pairs.iteritems():
             self.redis[name][key] = score
 
     def zscore(self, name, value):
         "Return the score of element ``value`` in sorted set ``name``"
         return self.redis[name][value]
+
+    def zrevrange(self, name, start, num, withscores=False,
+                  score_cast_func=float):
+        """
+        Return a range of values from sorted set ``name`` between
+        ``start`` and ``num`` sorted in descending order.
+
+        ``start`` and ``num`` can be negative, indicating the end of the range.
+
+        ``withscores`` indicates to return the scores along with the values
+        The return type is a list of (value, score) pairs
+
+        ``score_cast_func`` a callable used to cast the score return value
+        """
+        if withscores:
+            raise NotImplementedError()
+        items_descending_by_score = sorted(self.redis[name].iteritems(), key=itemgetter(1), reverse=True)
+        selected_items = items_descending_by_score[start:start + num]
+        return [key for key, value in selected_items]
 
 
 def mock_redis_client():
