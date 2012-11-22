@@ -225,6 +225,9 @@ class MockRedis(object):
         selected_items = items_descending_by_score[start:start + num]
         return [key for key, value in selected_items]
 
+    def zcard(self, name):
+        "Return the number of elements in the sorted set ``name``"
+        return len(self.redis[name])
 
 def mock_redis_client():
     """Mock common.util.redis_client so we can return a MockRedis object
