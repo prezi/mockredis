@@ -222,7 +222,7 @@ class MockRedis(object):
         if withscores:
             raise NotImplementedError()
         items_descending_by_score = sorted(self.redis[name].iteritems(), key=itemgetter(1), reverse=True)
-        selected_items = items_descending_by_score[start:start + num]
+        selected_items = items_descending_by_score[start:num+1]
         return [key for key, value in selected_items]
 
     def zcard(self, name):
