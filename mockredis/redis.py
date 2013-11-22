@@ -119,6 +119,12 @@ class MockRedis(object):
 
         self.redis[hashkey][attribute] = value
 
+    def hincrby(self, name, key, amount=1):
+        "Increment the value of ``key`` in hash ``name`` by ``amount``"
+        self.redis[name][key] = self.redis[name].get(key, 0)
+        self.redis[name][key] += amount
+        return self.redis[name][key]
+
     def lrange(self, key, start, stop):
         """Emulate lrange."""
 
