@@ -89,6 +89,17 @@ class MockRedis(object):
 
         pass
 
+    def append(self, key, value):
+        """
+        Appends the string ``value`` to the value at ``key``. If ``key``
+        doesn't already exist, create it with a value of ``value``.
+        Returns the new length of the value at ``key``.
+        """
+        if self.redis[key]:
+            self.redis[key] += value
+        else:
+            self.redis[key] = value
+
     def hget(self, hashkey, attribute):  # pylint: disable=R0201
         """Emulate hget."""
 
