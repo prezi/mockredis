@@ -89,6 +89,15 @@ class MockRedis(object):
 
         pass
 
+    def setex(self, name, value, time):
+        self.set(name, value)
+
+    def set(self, name, value):
+        self.redis[name] = value
+
+    def publish(self, key, value):
+        pass
+
     def append(self, key, value):
         """
         Appends the string ``value`` to the value at ``key``. If ``key``
